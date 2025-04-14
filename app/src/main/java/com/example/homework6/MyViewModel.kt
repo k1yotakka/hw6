@@ -13,12 +13,28 @@ class MyViewModel @Inject constructor(
     private val useCase: MyUseCase
 ) : ViewModel() {
 
-    private val _data = MutableStateFlow<List<String>>(emptyList())
-    val data: StateFlow<List<String>> = _data
+    private val _state = MutableStateFlow<UiState>(UiState.Idle)
+    val state: StateFlow<UiState> = _state
 
-    init {
-        viewModelScope.launch {
-            _data.value = useCase()
+    fun handleIntent(intent: UiIntent) {
+        when (intent) {
+            is UiIntent.LoadWeather -> {
+                _state.value = UiState.Loading
+                viewModelScope.launch {
+                    try {
+                        val weather = useCase(intent.city)
+                        _state.value = UiState.Success(
+                            listOf(
+                                "Город: ${weather.name}",
+                                "Температура: ${weather.main.temp}°C",
+                                "Влажность: ${weather.main.humidity}%"
+                            )
+                        )
+                    } catch (e: Exception) {
+                        _state.value = UiState.Error(e.message ?: "Ошибка загрузки")
+                    }
+                }
+            }
         }
     }
 }

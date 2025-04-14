@@ -2,5 +2,5 @@ package com.example.homework6
 
 
 interface MyRepository {
-    suspend fun getData(): List<String>
+    suspend fun getWeather(city: String): WeatherResponse
 }
